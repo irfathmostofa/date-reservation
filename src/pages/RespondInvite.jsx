@@ -45,11 +45,12 @@ export default function RespondInvite() {
   const [choice, setChoice] = useState({
     date: null,
     time: "",
-    food: "",
+    foods: [],
     place: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   const fetchInvite = useCallback(async () => {
     setLoading(true);
@@ -140,14 +141,23 @@ export default function RespondInvite() {
     setChoice((prev) => ({ ...prev, time }));
   }
 
+  function toggleFoodSelection(food) {
+    setChoice((prev) => {
+      const foods = prev.foods.includes(food)
+        ? prev.foods.filter((f) => f !== food)
+        : [...prev.foods, food];
+      return { ...prev, foods };
+    });
+  }
+
   function confirmDateTime() {
     if (!choice.date || !choice.time) return;
     showComplimentFor(invite.receiver_gender);
     setStep(2);
   }
 
-  function selectFood(val) {
-    setChoice((prev) => ({ ...prev, food: val }));
+  function confirmFoods() {
+    if (choice.foods.length === 0) return;
     showComplimentFor(invite.receiver_gender);
     setStep(3);
   }
@@ -163,13 +173,14 @@ export default function RespondInvite() {
     setSubmitting(true);
 
     const dateStr = choice.date.toISOString().split("T")[0];
+    const foodsString = choice.foods.join(", ");
 
     const { error: updateError } = await supabase
       .from("invitations")
       .update({
         confirmed_date: dateStr,
         confirmed_time: choice.time,
-        confirmed_food: choice.food,
+        confirmed_food: foodsString,
         confirmed_place: choice.place,
         status: "confirmed",
         responded_at: new Date().toISOString(),
@@ -184,14 +195,89 @@ export default function RespondInvite() {
     }
 
     setSubmitting(false);
+    // Update the invite with confirmed data
     setInvite((prev) => ({
       ...prev,
       status: "confirmed",
       confirmed_date: dateStr,
       confirmed_time: choice.time,
-      confirmed_food: choice.food,
+      confirmed_food: foodsString,
       confirmed_place: choice.place,
     }));
+    setIsConfirmed(true);
+  }
+
+  // If confirmed, show the confirmation page
+  if (
+    isConfirmed ||
+    (invite && invite.status === "confirmed" && invite.confirmed_date)
+  ) {
+    const displayInvite = isConfirmed
+      ? {
+          ...invite,
+          confirmed_date: choice.date?.toISOString().split("T")[0],
+          confirmed_time: choice.time,
+          confirmed_food: choice.foods.join(", "),
+          confirmed_place: choice.place,
+        }
+      : invite;
+
+    return (
+      <div className="app-shell">
+        <div className="floaties" aria-hidden="true">
+          <span>♡</span>
+          <span>✿</span>
+          <span>♡</span>
+          <span>✿</span>
+          <span>♡</span>
+        </div>
+        <div className="card reveal">
+          <div className="step-header">
+            <span className="step-icon">🎉</span>
+            <div className="eyebrow">It's a date</div>
+            <h2>
+              {displayInvite.sender_name} <span className="heart">♡</span>{" "}
+              {displayInvite.receiver_name}
+            </h2>
+            <p>You're all set! Here's the plan:</p>
+          </div>
+
+          {/* Countdown Timer */}
+          <Countdown
+            targetDate={displayInvite.confirmed_date}
+            targetTime={displayInvite.confirmed_time}
+            onExpire={fetchInvite}
+          />
+
+          <div className="detail-list">
+            <div className="detail-row">
+              <span>📅 Date</span>
+              <span>
+                {formatFriendlyDate(
+                  new Date(displayInvite.confirmed_date + "T00:00:00"),
+                )}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span>⏰ Time</span>
+              <span>{formatTime(displayInvite.confirmed_time)}</span>
+            </div>
+            <div className="detail-row">
+              <span>🍽️ Food</span>
+              <span>{displayInvite.confirmed_food}</span>
+            </div>
+            <div className="detail-row">
+              <span>📍 Place</span>
+              <span>{displayInvite.confirmed_place}</span>
+            </div>
+          </div>
+
+          <div className="confirmation-message">
+            <p>✨ Can't wait to see you! ✨</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (loading) {
@@ -233,58 +319,6 @@ export default function RespondInvite() {
             <p>
               Thanks for letting {invite.sender_name} know. Maybe next time.
             </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (invite.status === "confirmed" && invite.confirmed_date) {
-    return (
-      <div className="app-shell">
-        <div className="floaties" aria-hidden="true">
-          <span>♡</span>
-          <span>✿</span>
-          <span>♡</span>
-          <span>✿</span>
-          <span>♡</span>
-        </div>
-        <div className="card reveal">
-          <div className="step-header">
-            <span className="step-icon">🎉</span>
-            <div className="eyebrow">It's a date</div>
-            <h2>
-              {invite.sender_name} <span className="heart">♡</span>{" "}
-              {invite.receiver_name}
-            </h2>
-          </div>
-
-          <Countdown
-            targetDate={invite.confirmed_date}
-            onExpire={fetchInvite}
-          />
-
-          <div className="detail-list">
-            <div className="detail-row">
-              <span>📅 Date</span>
-              <span>
-                {formatFriendlyDate(
-                  new Date(invite.confirmed_date + "T00:00:00"),
-                )}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span>⏰ Time</span>
-              <span>{formatTime(invite.confirmed_time)}</span>
-            </div>
-            <div className="detail-row">
-              <span>🍽️ Food</span>
-              <span>{invite.confirmed_food}</span>
-            </div>
-            <div className="detail-row">
-              <span>📍 Place</span>
-              <span>{invite.confirmed_place}</span>
-            </div>
           </div>
         </div>
       </div>
@@ -410,18 +444,42 @@ export default function RespondInvite() {
             <div className="step-header">
               <span className="step-icon">🍽️</span>
               <h3>What sounds good to eat?</h3>
+              <p>Select one or more options that sound good to you.</p>
             </div>
-            <div className="option-grid">
-              {invite.food_options.map((f) => (
+
+            <div className="food-selection-grid">
+              {invite.food_options.map((food) => (
                 <button
-                  key={f}
-                  className="option-btn"
-                  onClick={() => selectFood(f)}
+                  key={food}
+                  className={`food-option-btn ${choice.foods.includes(food) ? "selected" : ""}`}
+                  onClick={() => toggleFoodSelection(food)}
                 >
-                  {f}
+                  <span className="food-name">{food}</span>
+                  {choice.foods.includes(food) && (
+                    <span className="check-mark">✓</span>
+                  )}
                 </button>
               ))}
             </div>
+
+            {choice.foods.length > 0 && (
+              <div className="selected-count-banner">
+                <span className="count-badge">{choice.foods.length}</span>
+                <span className="count-text">
+                  {choice.foods.length === 1
+                    ? "option selected"
+                    : "options selected"}
+                </span>
+              </div>
+            )}
+
+            <button
+              className="btn btn-primary"
+              onClick={confirmFoods}
+              disabled={choice.foods.length === 0}
+            >
+              Continue
+            </button>
           </div>
         )}
 
@@ -468,7 +526,7 @@ export default function RespondInvite() {
               </div>
               <div className="detail-row">
                 <span>🍽️ Food</span>
-                <span>{choice.food}</span>
+                <span>{choice.foods.join(", ")}</span>
               </div>
               <div className="detail-row">
                 <span>📍 Place</span>
