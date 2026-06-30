@@ -1,163 +1,197 @@
-import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { getRandomCompliment } from '../lib/compliments'
-import Countdown from '../components/Countdown.jsx'
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
+import { getRandomCompliment } from "../lib/compliments";
+import Countdown from "../components/Countdown.jsx";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
-const STEP_LABELS = ['Yes or no', 'Date', 'Food', 'Place']
+const STEP_LABELS = ["Yes or no", "Date & Time", "Food", "Place"];
 
 function todayISO() {
-  const d = new Date()
-  const offset = d.getTimezoneOffset()
-  const local = new Date(d.getTime() - offset * 60 * 1000)
-  return local.toISOString().split('T')[0]
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - offset * 60 * 1000);
+  return local.toISOString().split("T")[0];
 }
 
-function formatFriendlyDate(isoDate) {
-  if (!isoDate) return ''
-  const date = new Date(`${isoDate}T00:00:00`)
+function formatFriendlyDate(date) {
+  if (!date) return "";
   return date.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  })
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function formatTime(timeString) {
+  if (!timeString) return "";
+  const [hours, minutes] = timeString.split(":");
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+  return `${displayHour}:${minutes} ${ampm}`;
 }
 
 export default function RespondInvite() {
-  const { slug } = useParams()
+  const { slug } = useParams();
 
-  const [loading, setLoading] = useState(true)
-  const [invite, setInvite] = useState(null)
-  const [notFound, setNotFound] = useState(false)
+  const [loading, setLoading] = useState(true);
+  const [invite, setInvite] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
-  const [step, setStep] = useState(0)
-  const [compliment, setCompliment] = useState('')
-  const [choice, setChoice] = useState({ date: '', food: '', place: '' })
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const [step, setStep] = useState(0);
+  const [compliment, setCompliment] = useState("");
+  const [choice, setChoice] = useState({
+    date: null,
+    time: "",
+    food: "",
+    place: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchInvite = useCallback(async () => {
-    setLoading(true)
-    setNotFound(false)
+    setLoading(true);
+    setNotFound(false);
 
     const { data, error: fetchError } = await supabase
-      .from('invitations')
-      .select('*')
-      .eq('slug', slug)
-      .in('status', ['pending', 'confirmed'])
-      .order('created_at', { ascending: false })
+      .from("invitations")
+      .select("*")
+      .eq("slug", slug)
+      .in("status", ["pending", "confirmed"])
+      .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle()
+      .maybeSingle();
 
     if (fetchError) {
-      console.error(fetchError)
-      setNotFound(true)
-      setLoading(false)
-      return
+      console.error(fetchError);
+      setNotFound(true);
+      setLoading(false);
+      return;
     }
 
     if (!data) {
-      setNotFound(true)
-      setLoading(false)
-      return
+      setNotFound(true);
+      setLoading(false);
+      return;
     }
 
-    if (data.status === 'confirmed' && data.confirmed_date) {
-      const isPast = new Date(data.confirmed_date) < new Date(new Date().toDateString())
+    if (data.status === "confirmed" && data.confirmed_date) {
+      const isPast =
+        new Date(data.confirmed_date) < new Date(new Date().toDateString());
       if (isPast) {
-        await supabase.from('invitations').update({ status: 'completed' }).eq('id', data.id)
-        setNotFound(true)
-        setLoading(false)
-        return
+        await supabase
+          .from("invitations")
+          .update({ status: "completed" })
+          .eq("id", data.id);
+        setNotFound(true);
+        setLoading(false);
+        return;
       }
     }
 
-    setInvite(data)
-    setLoading(false)
-  }, [slug])
+    setInvite(data);
+    setLoading(false);
+  }, [slug]);
 
   useEffect(() => {
-    fetchInvite()
-  }, [fetchInvite])
+    fetchInvite();
+  }, [fetchInvite]);
 
   function showComplimentFor(gender) {
-    setCompliment(getRandomCompliment(gender))
+    setCompliment(getRandomCompliment(gender));
   }
 
   async function handleYes() {
-    showComplimentFor(invite.receiver_gender)
-    setStep(1)
-    await supabase.from('invitations').update({ said_yes: true }).eq('id', invite.id)
+    showComplimentFor(invite.receiver_gender);
+    setStep(1);
+    await supabase
+      .from("invitations")
+      .update({ said_yes: true })
+      .eq("id", invite.id);
   }
 
   async function handleNo() {
-    setError('')
-    setSubmitting(true)
+    setError("");
+    setSubmitting(true);
     const { error: updateError } = await supabase
-      .from('invitations')
-      .update({ said_yes: false, status: 'declined', responded_at: new Date().toISOString() })
-      .eq('id', invite.id)
-    setSubmitting(false)
+      .from("invitations")
+      .update({
+        said_yes: false,
+        status: "declined",
+        responded_at: new Date().toISOString(),
+      })
+      .eq("id", invite.id);
+    setSubmitting(false);
     if (updateError) {
-      console.error(updateError)
-      setError('Something went wrong. Please try again.')
-      return
+      console.error(updateError);
+      setError("Something went wrong. Please try again.");
+      return;
     }
-    setInvite((prev) => ({ ...prev, status: 'declined' }))
+    setInvite((prev) => ({ ...prev, status: "declined" }));
   }
 
-  function handleDateChange(val) {
-    setChoice((prev) => ({ ...prev, date: val }))
+  function handleDateChange(date) {
+    setChoice((prev) => ({ ...prev, date }));
   }
 
-  function confirmDate() {
-    if (!choice.date) return
-    showComplimentFor(invite.receiver_gender)
-    setStep(2)
+  function handleTimeSelect(time) {
+    setChoice((prev) => ({ ...prev, time }));
+  }
+
+  function confirmDateTime() {
+    if (!choice.date || !choice.time) return;
+    showComplimentFor(invite.receiver_gender);
+    setStep(2);
   }
 
   function selectFood(val) {
-    setChoice((prev) => ({ ...prev, food: val }))
-    showComplimentFor(invite.receiver_gender)
-    setStep(3)
+    setChoice((prev) => ({ ...prev, food: val }));
+    showComplimentFor(invite.receiver_gender);
+    setStep(3);
   }
 
   function selectPlace(val) {
-    setChoice((prev) => ({ ...prev, place: val }))
-    showComplimentFor(invite.receiver_gender)
-    setStep(4)
+    setChoice((prev) => ({ ...prev, place: val }));
+    showComplimentFor(invite.receiver_gender);
+    setStep(4);
   }
 
   async function handleFinalSubmit() {
-    setError('')
-    setSubmitting(true)
+    setError("");
+    setSubmitting(true);
+
+    const dateStr = choice.date.toISOString().split("T")[0];
 
     const { error: updateError } = await supabase
-      .from('invitations')
+      .from("invitations")
       .update({
-        confirmed_date: choice.date,
+        confirmed_date: dateStr,
+        confirmed_time: choice.time,
         confirmed_food: choice.food,
         confirmed_place: choice.place,
-        status: 'confirmed',
+        status: "confirmed",
         responded_at: new Date().toISOString(),
       })
-      .eq('id', invite.id)
+      .eq("id", invite.id);
 
     if (updateError) {
-      console.error(updateError)
-      setError('Something went wrong saving your response. Please try again.')
-      setSubmitting(false)
-      return
+      console.error(updateError);
+      setError("Something went wrong saving your response. Please try again.");
+      setSubmitting(false);
+      return;
     }
 
-    setSubmitting(false)
+    setSubmitting(false);
     setInvite((prev) => ({
       ...prev,
-      status: 'confirmed',
-      confirmed_date: choice.date,
+      status: "confirmed",
+      confirmed_date: dateStr,
+      confirmed_time: choice.time,
       confirmed_food: choice.food,
       confirmed_place: choice.place,
-    }))
+    }));
   }
 
   if (loading) {
@@ -167,7 +201,7 @@ export default function RespondInvite() {
           <p className="loading-text">Loading your invitation...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (notFound) {
@@ -178,14 +212,17 @@ export default function RespondInvite() {
             <span className="step-icon">🤍</span>
             <div className="eyebrow">Date Reservation</div>
             <h2>No active invitation right now</h2>
-            <p>There's nothing waiting for this link at the moment. Check back later.</p>
+            <p>
+              There's nothing waiting for this link at the moment. Check back
+              later.
+            </p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  if (invite.status === 'declined') {
+  if (invite.status === "declined") {
     return (
       <div className="app-shell">
         <div className="card">
@@ -193,34 +230,52 @@ export default function RespondInvite() {
             <span className="step-icon">🌧️</span>
             <div className="eyebrow">Date Reservation</div>
             <h2>No worries.</h2>
-            <p>Thanks for letting {invite.sender_name} know. Maybe next time.</p>
+            <p>
+              Thanks for letting {invite.sender_name} know. Maybe next time.
+            </p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  if (invite.status === 'confirmed' && invite.confirmed_date) {
+  if (invite.status === "confirmed" && invite.confirmed_date) {
     return (
       <div className="app-shell">
         <div className="floaties" aria-hidden="true">
-          <span>♡</span><span>✿</span><span>♡</span><span>✿</span><span>♡</span>
+          <span>♡</span>
+          <span>✿</span>
+          <span>♡</span>
+          <span>✿</span>
+          <span>♡</span>
         </div>
         <div className="card reveal">
           <div className="step-header">
             <span className="step-icon">🎉</span>
             <div className="eyebrow">It's a date</div>
             <h2>
-              {invite.sender_name} <span className="heart">♡</span> {invite.receiver_name}
+              {invite.sender_name} <span className="heart">♡</span>{" "}
+              {invite.receiver_name}
             </h2>
           </div>
 
-          <Countdown targetDate={invite.confirmed_date} onExpire={fetchInvite} />
+          <Countdown
+            targetDate={invite.confirmed_date}
+            onExpire={fetchInvite}
+          />
 
           <div className="detail-list">
             <div className="detail-row">
               <span>📅 Date</span>
-              <span>{formatFriendlyDate(invite.confirmed_date)}</span>
+              <span>
+                {formatFriendlyDate(
+                  new Date(invite.confirmed_date + "T00:00:00"),
+                )}
+              </span>
+            </div>
+            <div className="detail-row">
+              <span>⏰ Time</span>
+              <span>{formatTime(invite.confirmed_time)}</span>
             </div>
             <div className="detail-row">
               <span>🍽️ Food</span>
@@ -233,18 +288,25 @@ export default function RespondInvite() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="app-shell">
       <div className="floaties" aria-hidden="true">
-        <span>♡</span><span>✿</span><span>♡</span><span>✿</span><span>♡</span>
+        <span>♡</span>
+        <span>✿</span>
+        <span>♡</span>
+        <span>✿</span>
+        <span>♡</span>
       </div>
       <div className="card reveal">
         <div className="step-progress">
           {STEP_LABELS.map((label, i) => (
-            <div key={label} className={`step-dot ${i < step ? 'done' : i === step ? 'active' : ''}`} />
+            <div
+              key={label}
+              className={`step-dot ${i < step ? "done" : i === step ? "active" : ""}`}
+            />
           ))}
         </div>
 
@@ -253,14 +315,27 @@ export default function RespondInvite() {
             <div className="step-header">
               <span className="step-icon">💌</span>
               <div className="eyebrow">An invitation for you</div>
-              <h2>Will you date {invite.sender_name}? <span className="heart">♡</span></h2>
-              <p>{invite.receiver_name}, no pressure — just an honest yes or no.</p>
+              <h2>
+                Will you date {invite.sender_name}?{" "}
+                <span className="heart">♡</span>
+              </h2>
+              <p>
+                {invite.receiver_name}, no pressure — just an honest yes or no.
+              </p>
             </div>
             <div className="btn-row">
-              <button className="btn btn-ghost" onClick={handleNo} disabled={submitting}>
+              <button
+                className="btn btn-ghost"
+                onClick={handleNo}
+                disabled={submitting}
+              >
                 No
               </button>
-              <button className="btn btn-primary" onClick={handleYes} disabled={submitting}>
+              <button
+                className="btn btn-primary"
+                onClick={handleYes}
+                disabled={submitting}
+              >
                 Yes ♡
               </button>
             </div>
@@ -274,18 +349,56 @@ export default function RespondInvite() {
             <div className="step-header">
               <span className="step-icon">📅</span>
               <h3>When are you free?</h3>
-              <p>Pick whatever day works for you — totally your call, no influence from {invite.sender_name}.</p>
+              <p>
+                Pick whatever day and time works for you — totally your call, no
+                influence from {invite.sender_name}.
+              </p>
             </div>
-            <input
-              type="date"
-              min={todayISO()}
-              value={choice.date}
-              onChange={(e) => handleDateChange(e.target.value)}
-            />
-            {choice.date && (
-              <div className="date-picked-banner">{formatFriendlyDate(choice.date)} ✦</div>
+
+            <div className="date-time-selector">
+              <div className="calendar-container">
+                <label className="section-label">Select Date</label>
+                <Calendar
+                  onChange={handleDateChange}
+                  value={choice.date}
+                  minDate={new Date()}
+                  className="react-calendar-full"
+                  tileDisabled={({ date }) =>
+                    date < new Date(new Date().setHours(0, 0, 0, 0))
+                  }
+                />
+              </div>
+
+              {choice.date && (
+                <div className="time-selector-wrapper">
+                  <label className="section-label">Select Time</label>
+                  <div className="time-chips-grid">
+                    {invite.time_options &&
+                      invite.time_options.map((time) => (
+                        <button
+                          key={time}
+                          className={`time-chip ${choice.time === time ? "selected" : ""}`}
+                          onClick={() => handleTimeSelect(time)}
+                        >
+                          {formatTime(time)}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {choice.date && choice.time && (
+              <div className="date-picked-banner">
+                {formatFriendlyDate(choice.date)} at {formatTime(choice.time)} ✦
+              </div>
             )}
-            <button className="btn btn-primary" onClick={confirmDate} disabled={!choice.date}>
+
+            <button
+              className="btn btn-primary"
+              onClick={confirmDateTime}
+              disabled={!choice.date || !choice.time}
+            >
               Continue
             </button>
           </div>
@@ -300,7 +413,11 @@ export default function RespondInvite() {
             </div>
             <div className="option-grid">
               {invite.food_options.map((f) => (
-                <button key={f} className="option-btn" onClick={() => selectFood(f)}>
+                <button
+                  key={f}
+                  className="option-btn"
+                  onClick={() => selectFood(f)}
+                >
                   {f}
                 </button>
               ))}
@@ -317,7 +434,11 @@ export default function RespondInvite() {
             </div>
             <div className="option-grid">
               {invite.place_options.map((p) => (
-                <button key={p} className="option-btn" onClick={() => selectPlace(p)}>
+                <button
+                  key={p}
+                  className="option-btn"
+                  onClick={() => selectPlace(p)}
+                >
                   {p}
                 </button>
               ))}
@@ -330,12 +451,20 @@ export default function RespondInvite() {
             {compliment && <div className="compliment">{compliment}</div>}
             <div className="step-header">
               <span className="step-icon">🎉</span>
-              <h3>That's everything <span className="heart">♡</span></h3>
+              <h3>
+                That's everything <span className="heart">♡</span>
+              </h3>
             </div>
             <div className="detail-list">
               <div className="detail-row">
                 <span>📅 Date</span>
-                <span>{formatFriendlyDate(choice.date)}</span>
+                <span>
+                  {choice.date ? formatFriendlyDate(choice.date) : ""}
+                </span>
+              </div>
+              <div className="detail-row">
+                <span>⏰ Time</span>
+                <span>{formatTime(choice.time)}</span>
               </div>
               <div className="detail-row">
                 <span>🍽️ Food</span>
@@ -347,12 +476,16 @@ export default function RespondInvite() {
               </div>
             </div>
             {error && <p className="error-text">{error}</p>}
-            <button className="btn btn-primary" onClick={handleFinalSubmit} disabled={submitting}>
-              {submitting ? 'Confirming...' : 'Confirm ♡'}
+            <button
+              className="btn btn-primary"
+              onClick={handleFinalSubmit}
+              disabled={submitting}
+            >
+              {submitting ? "Confirming..." : "Confirm ♡"}
             </button>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

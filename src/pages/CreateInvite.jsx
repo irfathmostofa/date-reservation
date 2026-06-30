@@ -1,55 +1,75 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import { slugify } from '../lib/slugify'
-import OptionListEditor from '../components/OptionListEditor.jsx'
+import { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { slugify } from "../lib/slugify";
+import OptionListEditor from "../components/OptionListEditor.jsx";
 
 const initialState = {
-  senderName: '',
-  senderEmail: '',
-  receiverName: '',
-  receiverGender: '',
-  receiverEmail: '',
+  senderName: "",
+  senderEmail: "",
+  receiverName: "",
+  receiverGender: "",
+  receiverEmail: "",
+};
+
+// Generate time slots from 9:00 AM to 10:00 PM in 30-minute increments
+function generateTimeSlots() {
+  const slots = [];
+  for (let hour = 9; hour <= 22; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const displayHour = hour > 12 ? hour - 12 : hour;
+      const displayMinute = minute === 0 ? "00" : minute;
+      const timeString = `${displayHour}:${displayMinute} ${ampm}`;
+      const valueString = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+      slots.push({ label: timeString, value: valueString });
+    }
+  }
+  return slots;
 }
 
+const TIME_SLOTS = generateTimeSlots();
+
 export default function CreateInvite() {
-  const [form, setForm] = useState(initialState)
-  const [foodOptions, setFoodOptions] = useState([])
-  const [placeOptions, setPlaceOptions] = useState([])
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [resultLink, setResultLink] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [form, setForm] = useState(initialState);
+  const [foodOptions, setFoodOptions] = useState([]);
+  const [placeOptions, setPlaceOptions] = useState([]);
+  const [timeOptions, setTimeOptions] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [resultLink, setResultLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
   function updateField(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }))
+    setForm((prev) => ({ ...prev, [field]: value }));
   }
 
   function validate() {
-    if (!form.senderName.trim()) return 'Your name is required.'
-    if (!form.senderEmail.trim()) return 'Your email is required.'
-    if (!form.receiverName.trim()) return 'Her/his name is required.'
-    if (!form.receiverGender) return 'Please select a gender.'
-    if (!form.receiverEmail.trim()) return 'Receiver email is required.'
-    if (foodOptions.length === 0) return 'Add at least one food option.'
-    if (placeOptions.length === 0) return 'Add at least one place option.'
-    return ''
+    if (!form.senderName.trim()) return "Your name is required.";
+    if (!form.senderEmail.trim()) return "Your email is required.";
+    if (!form.receiverName.trim()) return "Her/his name is required.";
+    if (!form.receiverGender) return "Please select a gender.";
+    if (!form.receiverEmail.trim()) return "Receiver email is required.";
+    if (foodOptions.length === 0) return "Add at least one food option.";
+    if (placeOptions.length === 0) return "Add at least one place option.";
+    if (timeOptions.length === 0) return "Add at least one time option.";
+    return "";
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    const validationError = validate()
+    e.preventDefault();
+    const validationError = validate();
     if (validationError) {
-      setError(validationError)
-      return
+      setError(validationError);
+      return;
     }
-    setError('')
-    setSubmitting(true)
+    setError("");
+    setSubmitting(true);
 
-    const slug = slugify(form.receiverName)
+    const slug = slugify(form.receiverName);
 
     try {
       const { error: insertError } = await supabase
-        .from('invitations')
+        .from("invitations")
         .insert({
           slug,
           sender_name: form.senderName.trim(),
@@ -59,39 +79,41 @@ export default function CreateInvite() {
           receiver_email: form.receiverEmail.trim(),
           food_options: foodOptions,
           place_options: placeOptions,
-          status: 'pending',
+          time_options: timeOptions,
+          status: "pending",
         })
         .select()
-        .single()
+        .single();
 
-      if (insertError) throw insertError
+      if (insertError) throw insertError;
 
-      const link = `${window.location.origin}/${slug}`
-      setResultLink(link)
+      const link = `${window.location.origin}/${slug}`;
+      setResultLink(link);
     } catch (err) {
-      console.error(err)
-      setError('Something went wrong creating the invitation. Please try again.')
+      console.error(err);
+      setError(
+        "Something went wrong creating the invitation. Please try again.",
+      );
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
   async function copyToClipboard() {
     try {
-      await navigator.clipboard.writeText(resultLink)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(resultLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err)
-      // Fallback method
-      const textArea = document.createElement('textarea')
-      textArea.value = resultLink
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textArea)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      console.error("Failed to copy:", err);
+      const textArea = document.createElement("textarea");
+      textArea.value = resultLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   }
 
@@ -99,14 +121,23 @@ export default function CreateInvite() {
     return (
       <div className="app-shell">
         <div className="floaties" aria-hidden="true">
-          <span>♡</span><span>✿</span><span>♡</span><span>✿</span><span>♡</span>
+          <span>♡</span>
+          <span>✿</span>
+          <span>♡</span>
+          <span>✿</span>
+          <span>♡</span>
         </div>
         <div className="card reveal">
           <div className="step-header">
             <span className="step-icon">💌</span>
             <div className="eyebrow">Invitation created</div>
-            <h2>It's live <span className="heart">♡</span></h2>
-            <p>Share this link with {form.receiverName} — her response will show up right here in the link.</p>
+            <h2>
+              It's live <span className="heart">♡</span>
+            </h2>
+            <p>
+              Share this link with {form.receiverName} — their response will
+              show up right here in the link.
+            </p>
           </div>
           <div className="link-box">
             {resultLink}
@@ -116,38 +147,46 @@ export default function CreateInvite() {
               onClick={copyToClipboard}
               aria-label="Copy link to clipboard"
             >
-              {copied ? '✓ Copied!' : '📋 Copy'}
+              {copied ? "✓ Copied!" : "📋 Copy"}
             </button>
           </div>
           <button
             type="button"
             className="btn btn-primary"
             onClick={() => {
-              setForm(initialState)
-              setFoodOptions([])
-              setPlaceOptions([])
-              setResultLink('')
-              setCopied(false)
+              setForm(initialState);
+              setFoodOptions([]);
+              setPlaceOptions([]);
+              setTimeOptions([]);
+              setResultLink("");
+              setCopied(false);
             }}
           >
             Create another invitation
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="app-shell">
       <div className="floaties" aria-hidden="true">
-        <span>♡</span><span>✿</span><span>♡</span><span>✿</span><span>♡</span>
+        <span>♡</span>
+        <span>✿</span>
+        <span>♡</span>
+        <span>✿</span>
+        <span>♡</span>
       </div>
       <div className="card reveal">
         <div className="step-header">
           <span className="step-icon">💌</span>
           <div className="eyebrow">Create invitation</div>
           <h2>Set up your invite</h2>
-          <p>Fill in the details — she'll get a sweet, step-by-step way to respond, and she'll pick her own date freely.</p>
+          <p>
+            Fill in the details — they'll get a sweet, step-by-step way to
+            respond, and they'll pick their own date and time freely.
+          </p>
         </div>
 
         <form className="form-grid" onSubmit={handleSubmit}>
@@ -158,7 +197,7 @@ export default function CreateInvite() {
               type="text"
               placeholder="Your name"
               value={form.senderName}
-              onChange={(e) => updateField('senderName', e.target.value)}
+              onChange={(e) => updateField("senderName", e.target.value)}
             />
           </div>
 
@@ -169,18 +208,18 @@ export default function CreateInvite() {
               type="email"
               placeholder="you@example.com"
               value={form.senderEmail}
-              onChange={(e) => updateField('senderEmail', e.target.value)}
+              onChange={(e) => updateField("senderEmail", e.target.value)}
             />
           </div>
 
           <div className="field">
-            <label htmlFor="receiverName">Her / his name</label>
+            <label htmlFor="receiverName">Their name</label>
             <input
               id="receiverName"
               type="text"
               placeholder="e.g. Mahmoda"
               value={form.receiverName}
-              onChange={(e) => updateField('receiverName', e.target.value)}
+              onChange={(e) => updateField("receiverName", e.target.value)}
             />
           </div>
 
@@ -189,7 +228,7 @@ export default function CreateInvite() {
             <select
               id="receiverGender"
               value={form.receiverGender}
-              onChange={(e) => updateField('receiverGender', e.target.value)}
+              onChange={(e) => updateField("receiverGender", e.target.value)}
             >
               <option value="">Select gender</option>
               <option value="female">Female</option>
@@ -199,13 +238,13 @@ export default function CreateInvite() {
           </div>
 
           <div className="field">
-            <label htmlFor="receiverEmail">Her / his email</label>
+            <label htmlFor="receiverEmail">Their email</label>
             <input
               id="receiverEmail"
               type="email"
               placeholder="receiver@example.com"
               value={form.receiverEmail}
-              onChange={(e) => updateField('receiverEmail', e.target.value)}
+              onChange={(e) => updateField("receiverEmail", e.target.value)}
             />
           </div>
 
@@ -223,13 +262,24 @@ export default function CreateInvite() {
             onChange={setPlaceOptions}
           />
 
+          <OptionListEditor
+            label="Time options"
+            placeholder="e.g. 7:00 PM"
+            values={timeOptions}
+            onChange={setTimeOptions}
+          />
+
           {error && <p className="error-text">{error}</p>}
 
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
-            {submitting ? 'Creating...' : 'Create invitation'}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={submitting}
+          >
+            {submitting ? "Creating..." : "Create invitation"}
           </button>
         </form>
       </div>
     </div>
-  )
+  );
 }
