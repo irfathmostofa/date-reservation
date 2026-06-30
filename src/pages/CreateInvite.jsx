@@ -18,6 +18,7 @@ export default function CreateInvite() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [resultLink, setResultLink] = useState('')
+  const [copied, setCopied] = useState(false)
 
   function updateField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -75,6 +76,25 @@ export default function CreateInvite() {
     }
   }
 
+  async function copyToClipboard() {
+    try {
+      await navigator.clipboard.writeText(resultLink)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      // Fallback method
+      const textArea = document.createElement('textarea')
+      textArea.value = resultLink
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   if (resultLink) {
     return (
       <div className="app-shell">
@@ -88,7 +108,17 @@ export default function CreateInvite() {
             <h2>It's live <span className="heart">♡</span></h2>
             <p>Share this link with {form.receiverName} — her response will show up right here in the link.</p>
           </div>
-          <div className="link-box">{resultLink}</div>
+          <div className="link-box">
+            {resultLink}
+            <button
+              type="button"
+              className="btn btn-copy"
+              onClick={copyToClipboard}
+              aria-label="Copy link to clipboard"
+            >
+              {copied ? '✓ Copied!' : '📋 Copy'}
+            </button>
+          </div>
           <button
             type="button"
             className="btn btn-primary"
@@ -97,6 +127,7 @@ export default function CreateInvite() {
               setFoodOptions([])
               setPlaceOptions([])
               setResultLink('')
+              setCopied(false)
             }}
           >
             Create another invitation

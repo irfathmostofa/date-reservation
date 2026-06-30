@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap");
 
 :root {
   --rose: #ff8fab;
@@ -11,15 +11,19 @@
   --gold: #f6b93b;
   --white: #ffffff;
 
-  --font-display: 'Caveat', cursive;
-  --font-body: 'Quicksand', sans-serif;
+  --font-display: "Caveat", cursive;
+  --font-body: "Quicksand", sans-serif;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
@@ -68,22 +72,67 @@ a {
   animation: floatUp 9s ease-in-out infinite;
 }
 
-.floaties span:nth-child(1) { left: 8%;  bottom: -10%; animation-delay: 0s;   font-size: 26px; }
-.floaties span:nth-child(2) { left: 24%; bottom: -10%; animation-delay: 1.5s; font-size: 18px; color: var(--gold); }
-.floaties span:nth-child(3) { left: 52%; bottom: -10%; animation-delay: 3s;   font-size: 30px; }
-.floaties span:nth-child(4) { left: 72%; bottom: -10%; animation-delay: 4.5s; font-size: 16px; color: var(--gold); }
-.floaties span:nth-child(5) { left: 88%; bottom: -10%; animation-delay: 2s;   font-size: 24px; }
+.floaties span:nth-child(1) {
+  left: 8%;
+  bottom: -10%;
+  animation-delay: 0s;
+  font-size: 26px;
+}
+.floaties span:nth-child(2) {
+  left: 24%;
+  bottom: -10%;
+  animation-delay: 1.5s;
+  font-size: 18px;
+  color: var(--gold);
+}
+.floaties span:nth-child(3) {
+  left: 52%;
+  bottom: -10%;
+  animation-delay: 3s;
+  font-size: 30px;
+}
+.floaties span:nth-child(4) {
+  left: 72%;
+  bottom: -10%;
+  animation-delay: 4.5s;
+  font-size: 16px;
+  color: var(--gold);
+}
+.floaties span:nth-child(5) {
+  left: 88%;
+  bottom: -10%;
+  animation-delay: 2s;
+  font-size: 24px;
+}
 
 @keyframes floatUp {
-  0%   { transform: translateY(0) rotate(0deg);   opacity: 0; }
-  10%  { opacity: 0.35; }
-  90%  { opacity: 0.35; }
-  100% { transform: translateY(-110vh) rotate(25deg); opacity: 0; }
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.35;
+  }
+  90% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-110vh) rotate(25deg);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .floaties span { animation: none; opacity: 0.15; }
-  .reveal, .step-body, .compliment, .step-icon { animation: none !important; }
+  .floaties span {
+    animation: none;
+    opacity: 0.15;
+  }
+  .reveal,
+  .step-body,
+  .compliment,
+  .step-icon {
+    animation: none !important;
+  }
 }
 
 /* ---------- card ---------- */
@@ -109,8 +158,14 @@ a {
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(18px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .heart {
@@ -120,8 +175,13 @@ a {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.18); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.18);
+  }
 }
 
 /* ---------- typography ---------- */
@@ -135,7 +195,9 @@ a {
   text-align: center;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: var(--font-display);
   font-weight: 700;
   margin: 0;
@@ -144,9 +206,15 @@ h1, h2, h3 {
   text-align: center;
 }
 
-h1 { font-size: 38px; }
-h2 { font-size: 32px; }
-h3 { font-size: 26px; }
+h1 {
+  font-size: 38px;
+}
+h2 {
+  font-size: 32px;
+}
+h3 {
+  font-size: 26px;
+}
 
 p {
   line-height: 1.6;
@@ -186,8 +254,14 @@ p {
 }
 
 @keyframes stepSlide {
-  from { opacity: 0; transform: translateX(14px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .step-header {
@@ -205,9 +279,17 @@ p {
 }
 
 @keyframes bounceIn {
-  0%   { opacity: 0; transform: scale(0.5); }
-  70%  { opacity: 1; transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* ---------- form elements ---------- */
@@ -239,7 +321,9 @@ select {
   font-weight: 500;
   outline: none;
   text-align: center;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 input::placeholder {
@@ -284,7 +368,10 @@ select:focus {
   font-weight: 700;
   font-family: var(--font-body);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .btn:active {
@@ -352,7 +439,10 @@ select:focus {
   font-family: var(--font-body);
   cursor: pointer;
   width: 100%;
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .option-btn:hover {
@@ -422,9 +512,18 @@ select:focus {
 }
 
 @keyframes complimentPop {
-  0%   { opacity: 0; transform: translateY(8px) scale(0.96); }
-  60%  { opacity: 1; transform: translateY(-2px) scale(1.01); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* ---------- countdown ---------- */
@@ -544,9 +643,53 @@ select:focus {
     border-radius: 22px;
     gap: 12px;
   }
-  h1 { font-size: 30px; }
-  h2 { font-size: 26px; }
-  h3 { font-size: 22px; }
-  .countdown-num { font-size: 22px; }
-  .btn-row { flex-direction: column; }
+  h1 {
+    font-size: 30px;
+  }
+  h2 {
+    font-size: 26px;
+  }
+  h3 {
+    font-size: 22px;
+  }
+  .countdown-num {
+    font-size: 22px;
+  }
+  .btn-row {
+    flex-direction: column;
+  }
+}
+/* .link-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f5f3f0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 16px 0 24px 0;
+  word-break: break-all;
+  font-size: 14px;
+  color: #2d2a26;
+} */
+
+.btn-copy {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid #ddd;
+  padding: 6px 14px;
+  margin-left: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #2d2a26;
+}
+
+.btn-copy:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: #bbb;
+}
+
+.btn-copy:active {
+  transform: scale(0.95);
 }
