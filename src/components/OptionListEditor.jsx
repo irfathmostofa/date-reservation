@@ -32,7 +32,7 @@ export default function OptionListEditor({
   }
 
   return (
-    <div>
+    <div className="field">
       <label>{label}</label>
       <div className="option-row">
         <input
