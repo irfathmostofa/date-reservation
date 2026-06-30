@@ -309,6 +309,7 @@ label {
 input[type="text"],
 input[type="email"],
 input[type="date"],
+input[type="time"],
 select {
   width: 100%;
   padding: 13px 14px;
@@ -326,6 +327,22 @@ select {
     box-shadow 0.2s ease;
 }
 
+/* Style the time picker specifically */
+input[type="time"] {
+  padding: 13px 14px;
+  cursor: pointer;
+}
+
+/* Custom styling for time picker in different browsers */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.4);
+  cursor: pointer;
+}
+
+input[type="time"]::-webkit-datetime-edit {
+  color: var(--plum-text);
+}
+
 input::placeholder {
   color: rgba(90, 58, 74, 0.35);
   text-align: center;
@@ -340,6 +357,7 @@ select:focus {
 /* form fields on the create page should be left-aligned (denser data entry) */
 .form-grid input[type="text"],
 .form-grid input[type="email"],
+.form-grid input[type="time"],
 .form-grid select {
   text-align: left;
 }
@@ -353,7 +371,6 @@ select:focus {
   flex-direction: column;
   gap: 16px;
 }
-
 /* ---------- buttons ---------- */
 
 .btn {

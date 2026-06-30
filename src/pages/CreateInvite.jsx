@@ -265,6 +265,7 @@ export default function CreateInvite() {
           <OptionListEditor
             label="Time options"
             placeholder="e.g. 7:00 PM"
+            type="time"
             values={timeOptions}
             onChange={setTimeOptions}
           />
