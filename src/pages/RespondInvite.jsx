@@ -462,17 +462,6 @@ export default function RespondInvite() {
               ))}
             </div>
 
-            {choice.foods.length > 0 && (
-              <div className="selected-count-banner">
-                <span className="count-badge">{choice.foods.length}</span>
-                <span className="count-text">
-                  {choice.foods.length === 1
-                    ? "option selected"
-                    : "options selected"}
-                </span>
-              </div>
-            )}
-
             <button
               className="btn btn-primary"
               onClick={confirmFoods}
