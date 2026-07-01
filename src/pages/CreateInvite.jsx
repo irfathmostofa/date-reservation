@@ -217,7 +217,7 @@ export default function CreateInvite() {
             <input
               id="receiverName"
               type="text"
-              placeholder="e.g. Mahmoda"
+              placeholder="e.g. Princess"
               value={form.receiverName}
               onChange={(e) => updateField("receiverName", e.target.value)}
             />
